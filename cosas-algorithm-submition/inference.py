@@ -5,6 +5,7 @@ import warnings
 
 import SimpleITK
 import torch
+from PitSAM.sam_lora_image_encoder import LoRA_Sam
 
 # from mmseg.apis import inference_model, init_model
 from PitSAM.segment_anything import sam_model_registry
@@ -63,7 +64,7 @@ def main():
                                                                     checkpoint=sam_checkpoint, pixel_mean=[0, 0, 0],
                                                                     pixel_std=[1, 1, 1])
     
-    pkg = import_module(sam_lora_image_encoder)
+    pkg = import_module(PitSAM.sam_lora_image_encoder)
     net = pkg.LoRA_Sam(sam, args.rank).cuda()
     net.load_lora_parameters(lora_checkpoint)
     net.to(device=device)
