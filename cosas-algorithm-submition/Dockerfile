@@ -13,6 +13,7 @@ COPY inference.py $PROJECTDIR
 COPY config.py $PROJECTDIR
 COPY checkpoint.pth $PROJECTDIR
 COPY mmsegmentation-1.2.2rc1-py3-none-any.whl $PROJECTDIR
+COPY COSAS/cosas-algorithm-submition/PitSAM $PROJECTDIR
 
 RUN pip3 install mmcv==2.2.0 -f https://download.openmmlab.com/mmcv/dist/cu121/torch2.3/index.html
 RUN pip3 install mmsegmentation-1.2.2rc1-py3-none-any.whl

@@ -7,7 +7,6 @@ import SimpleITK
 import torch
 from PitSAM.sam_lora_image_encoder import LoRA_Sam
 
-# from mmseg.apis import inference_model, init_model
 from PitSAM.segment_anything import sam_model_registry
 from importlib import import_module
 #from segment_anything import sam_model_registry, SamPredictor
