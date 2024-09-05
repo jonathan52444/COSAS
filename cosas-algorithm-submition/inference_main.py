@@ -57,8 +57,8 @@ def print_directory_contents():
 
 def main():
     # Define default variables
-    input_root = '/Users/sirbucks/Desktop/Coding/Workspaces/COSAS/cosas-algorithm-submition/input/images/adenocarcinoma-image'
-    output_root = '/Users/sirbucks/Desktop/Coding/Workspaces/COSAS/cosas-algorithm-submition/output/images/adenocarcinoma-mask'
+    input_root = '/input/images/adenocarcinoma-image' # '/Users/sirbucks/Desktop/Coding/Workspaces/COSAS/cosas-algorithm-submition/input/images/adenocarcinoma-image'
+    output_root = '/output/images/adenocarcinoma-mask' # '/Users/sirbucks/Desktop/Coding/Workspaces/COSAS/cosas-algorithm-submition/output/images/adenocarcinoma-mask'
     #cosas-algorithm-submition/output/images/adenocarcinoma-mask
     
     num_classes = 2
@@ -66,8 +66,8 @@ def main():
     input_size = 256  # The input size for training SAM model
     seed = 1234  # Random seed
     deterministic = 1  # Whether to use deterministic training
-    ckpt = '/Users/sirbucks/Desktop/Coding/Workspaces/COSAS/cosas-algorithm-submition/sam_vit_b_01ec64.pth' # 'sam_vit_b_01ec64.pth'  # Pretrained checkpoint
-    lora_ckpt = '/Users/sirbucks/Desktop/Coding/Workspaces/COSAS/cosas-algorithm-submition/checkpoint_199_512.pth' # 'checkpoint_199_512.pth'  # The checkpoint from LoRA
+    ckpt = 'sam_vit_b_01ec64.pth' # '/Users/sirbucks/Desktop/Coding/Workspaces/COSAS/cosas-algorithm-submition/sam_vit_b_01ec64.pth' #  # Pretrained checkpoint
+    lora_ckpt = 'checkpoint_199_512.pth'  # '/Users/sirbucks/Desktop/Coding/Workspaces/COSAS/cosas-algorithm-submition/checkpoint_199_512.pth' # The checkpoint from LoRA
     vit_name = 'vit_b'  # Select one vit model
     rank = 4  # Rank for LoRA adaptation
     module = 'sam_lora_image_encoder'
@@ -86,9 +86,8 @@ def main():
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
    
-    # if not os.path.exists(output_root):
-    #     logging.info('The path does not exist')
-    #     os.makedirs(output_root)
+    if not os.path.exists(output_root):
+        os.makedirs(output_root)
 
     # register model
     sam, img_embedding_size = sam_model_registry[vit_name](image_size=img_size,
@@ -120,6 +119,7 @@ def main():
             std=[0.229, 0.224, 0.225]
             )
         ])
+    
     logging.info('Entering the filename loop')
     for filename in os.listdir(input_root):
         if filename.endswith('.mha'):
@@ -130,26 +130,12 @@ def main():
 
                 prediction = np.zeros_like(image)
                 x, y = image.shape[0], image.shape[1]
-                logging.info(f'This is the image shape {image.shape}')
 
                 # Convert to PIL image
                 image = Image.fromarray(image)
-                
-                transform_img = transforms.Compose([
-                    transforms.Resize((512, 512)),
-                    transforms.ToTensor(),
-                    transforms.Normalize(
-                        mean=[0.485, 0.456, 0.406],
-                        std=[0.229, 0.224, 0.225]
-                        )
-                    ])
                 image = transform_img(image)
                 
                 inputs = image.unsqueeze(0).float().to(device)
-                # if x != patch_size[0] or y != patch_size[1]:
-                #     image = zoom(image, (1, patch_size[0] / x, patch_size[1] / y), order=3)
-                        
-                #inputs = torch.from_numpy(image).unsqueeze(0).float().cuda()
                 
                 net.eval()
                 with torch.no_grad():
@@ -160,19 +146,20 @@ def main():
                         
                     out = out.cpu().detach().numpy()
                     out_h, out_w = out.shape
-                    logging.info(f'This is the out shape {out.shape}')
                         
                     if x != out_h or y != out_w:
-                        prediction = zoom(out, (x / out_h, y / out_w), order=0)
-                        logging.info(f'This is the out shape {prediction.shape}')    
+                        prediction = zoom(out, (x / out_h, y / out_w), order=0)  
                     else:
                         prediction = out
-                        #logging.info(f'This is the out shape {prediction.shape}') 
                     
                     prd_itk = sitk.GetImageFromArray(prediction.astype(np.float32))
                     prd_itk.SetSpacing((1, 1, z_spacing))
                     sitk.WriteImage(prd_itk, output_path)
-            
+
+                    def write(path, array):
+                        image = SimpleITK.GetImageFromArray(array)
+                        SimpleITK.WriteImage(image, path, useCompression=False)
+
             except Exception as error:
                         logging.info(error)
 
