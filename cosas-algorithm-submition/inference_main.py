@@ -156,10 +156,6 @@ def main():
                     prd_itk.SetSpacing((1, 1, z_spacing))
                     sitk.WriteImage(prd_itk, output_path)
 
-                    def write(path, array):
-                        image = SimpleITK.GetImageFromArray(array)
-                        SimpleITK.WriteImage(image, path, useCompression=False)
-
             except Exception as error:
                         logging.info(error)
 
