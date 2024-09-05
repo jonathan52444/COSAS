@@ -21,17 +21,8 @@ def inference(multimask_output, db_config, net, test_save_path=None):
     transform_img = transforms.Compose([
         transforms.ToTensor(),
         ])
-
-    #transform_mask = transforms.Compose([
-        #transforms.Resize((img_size, img_size), interpolation=InterpolationMode.NEAREST),
-        # transforms.ToTensor(), Mobarak changed this part
-    #    ])
     
-    db_test = db_config['Dataset'](volume_path, folder_name, transform_img=transform_img, inference=True)
-    
-    if len(db_test) == 0:
-        logging.error(f"No data found in the provided folders: {folder_name}. Please check the dataset paths.")
-        return 0
+    db_test = db_config['Dataset'](volume_path, transform_img=transform_img, inference=True)
     
     print("The length of train set is: {}".format(len(db_test)))
     logging.info(f"Dataset loaded with {len(db_test)} samples.")
@@ -62,35 +53,22 @@ def config_to_dict(config):
 if __name__ == '__main__':
     # Define default variables
     config = None  # The config file provided by the trained model
-    volume_path = '/cluster/project7/SAMed/samed_codes/SAMed/testset/test_vol_h5/'
+    volume_path = '/input/images/adenocarcinoma-image'
+    output_dir = '/output/images/adenocarcinoma-mask'
     dataset = 'COSAS'  # Experiment name
     num_classes = 2
     list_dir = '/cluster/project7/SAMed/samed_codes/SAMed/lists/lists_Synapse/'
-    output_dir = '/output'
     img_size = 512  # Input image size of the network
     input_size = 256  # The input size for training SAM model
     seed = 1234  # Random seed
     is_savenii = False  # Whether to save results during inference
     deterministic = 1  # Whether to use deterministic training
-    ckpt = '/cluster/project7/SAMed/samed_codes/SAMed/checkpoints/sam_vit_b_01ec64.pth'  # Pretrained checkpoint
-    lora_ckpt = '/cluster/project7/SAMed/samed_codes/SAMed/checkpoints/epoch_159.pth'  # The checkpoint from LoRA
+    ckpt = 'sam_vit_b_01ec64.pth'  # Pretrained checkpoint
+    lora_ckpt = 'checkpoint_199_512.pth'  # The checkpoint from LoRA
     vit_name = 'vit_b'  # Select one vit model
     rank = 4  # Rank for LoRA adaptation
     module = 'sam_lora_image_encoder'
-
-    # You can now use these variables in your code as needed
-
     class_type = 'LoRA_Sam_v0_v2'
-
-    # Need to specify the task
-    # parser.add_argument('--task', type=int, default= None, help='select 1 or 2 or 3 for both')
-    
-
-    # if config is not None:
-    #     # overwtite default configurations with config file\
-    #     config_dict = config_to_dict(config)
-    #     for key in config_dict:
-    #         setattr(args, key, config_dict[key])
 
     if not deterministic:
         cudnn.benchmark = True
@@ -137,12 +115,12 @@ if __name__ == '__main__':
         multimask_output = False
 
     # initialize log
-    log_folder = os.path.join(output_dir, 'test_log')
-    os.makedirs(log_folder, exist_ok=True)
-    logging.basicConfig(filename=log_folder + '/' + 'log.txt', level=logging.INFO,
-                        format='[%(asctime)s.%(msecs)03d] %(message)s', datefmt='%H:%M:%S')
-    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
-    #logging.info(f'\nTesting for model state at {test_epoch}\n')
+    # log_folder = os.path.join(output_dir, 'test_log')
+    # os.makedirs(log_folder, exist_ok=True)
+    # logging.basicConfig(filename=log_folder + '/' + 'log.txt', level=logging.INFO,
+    #                     format='[%(asctime)s.%(msecs)03d] %(message)s', datefmt='%H:%M:%S')
+    # logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+    # logging.info(f'\nTesting for model state at {test_epoch}\n')
     # logging.info(str(args))
 
     if is_savenii:

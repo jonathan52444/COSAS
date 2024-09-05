@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y libgl1 libglib2.0-0 \
 
 ENV PROJECTDIR=/opt/app
 WORKDIR $PROJECTDIR
-COPY inference_main.py checkpoint_199_512.pth requirements.txt $PROJECTDIR/
+COPY inference_main.py checkpoint_199_512.pth sam_vit_b_01ec64.pth requirements.txt $PROJECTDIR/
 COPY PitSAM $PROJECTDIR/PitSAM
 
 # RUN pip3 install --upgrade pip

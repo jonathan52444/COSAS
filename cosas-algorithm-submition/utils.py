@@ -120,19 +120,12 @@ def test_single_volume(image, label, net, classes, multimask_output, patch_size=
         print('The code went to the if statement in the test_single_volume function')
         image = np.transpose(image, (2, 0, 1))
         prediction = np.zeros_like(label)
-        # for ind in range(image.shape[0]):
-        #slice = image[ind, :, :]
-            # print(f'THis is the slice shape {slice.shape}')
+        
         print(f'This is the image shape {image.shape} and this is the image type {type(image)} and this is the type of image.shape {type(image.shape)}')
         print(f'This is the case_name {case}')
         x, y = image.shape[1], image.shape[2]
         if x != patch_size[0] or y != patch_size[1]:
             image = zoom(image, (1, patch_size[0] / x, patch_size[1] / y), order=3)
-            # if x != input_size[0] or y != input_size[1]:
-            #     slice = zoom(slice, (input_size[0] / x, input_size[1] / y), order=3)  # previous using 0
-            # new_x, new_y = slice.shape[0], slice.shape[1]  # [input_size[0], input_size[1]]
-            # if new_x != patch_size[0] or new_y != patch_size[1]:
-            #     slice = zoom(slice, (patch_size[0] / new_x, patch_size[1] / new_y), order=3)  # previous using 0, patch_size[0], patch_size[1]
             
         inputs = torch.from_numpy(image).unsqueeze(0).float().cuda()
         print(f'This is the shape of the inputs to the neural net {inputs.shape}')
@@ -157,17 +150,6 @@ def test_single_volume(image, label, net, classes, multimask_output, patch_size=
             else:
                 prediction = out
                 print(f"This is the prediction after update's shape {prediction.shape}")
-            # prediction[ind] = pred
-        # only for debug
-        # if not os.path.exists('/output/images/pred'):
-        #     os.makedirs('/output/images/pred')
-        # if not os.path.exists('/output/images/label'):
-        #     os.makedirs('/output/images/label')
-        # assert prediction.shape[0] == label.shape[0]
-        # for i in range(label.shape[0]):
-        #     imageio.imwrite(f'/output/images/pred/pred_{i}.png', prediction[i])
-        #     imageio.imwrite(f'/output/images/label/label_{i}.png', label[i])
-        # temp = input('kkpsa')
     else:
         print('The code went to the else statement in the test_single_volume function')
         print(f'This is the image shape {image.shape}')
@@ -200,6 +182,4 @@ def test_single_volume(image, label, net, classes, multimask_output, patch_size=
         print(f"type of prd_itk: {type(prd_itk)}") #, value: {prd_itk}")
 
         sitk.WriteImage(prd_itk, test_save_path + '/' + case[0])
-        #sitk.WriteImage(img_itk, test_save_path + '/' + case + "_img.nii.gz")
-        #sitk.WriteImage(lab_itk, test_save_path + '/' + case + "_gt.nii.gz")
     return 1
