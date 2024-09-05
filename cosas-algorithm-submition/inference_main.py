@@ -7,13 +7,10 @@ import argparse
 import random
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
 import torch.backends.cudnn as cudnn
-from utils import test_single_volume
 from importlib import import_module
 from segment_anything import sam_model_registry
 
-from patch_DataLoader import COSASDataset, RandomGenerator
 from torchvision import transforms
 import SimpleITK as sitk
 import SimpleITK
