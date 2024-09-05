@@ -15,46 +15,20 @@ from segment_anything import sam_model_registry
 
 from patch_DataLoader import COSASDataset, RandomGenerator
 from torchvision import transforms
+import SimpleITK as sitk
+import SimpleITK
+from scipy.ndimage import zoom
 # from icecream import ic
 
-def inference(multimask_output, db_config, net, test_save_path=None):
-    transform_img = transforms.Compose([
-        transforms.ToTensor(),
-        ])
-    
-    db_test = db_config['Dataset'](volume_path, transform_img=transform_img, inference=True)
-    
-    print("The length of train set is: {}".format(len(db_test)))
-    logging.info(f"Dataset loaded with {len(db_test)} samples.")
+def read(path):
+    image = SimpleITK.ReadImage(path)
+    return SimpleITK.GetArrayFromImage(image)
 
-    testloader = DataLoader(db_test, batch_size=1, shuffle=False, num_workers=1)
-    logging.info(f'{len(testloader)} test iterations per epoch')
-    net.eval()
-    metric_list = 0.0
-    for i_batch, sampled_batch in enumerate(testloader):
-        h, w = sampled_batch['image'].shape[2:]
-        image, label, case_name, original_size  = sampled_batch['image'], sampled_batch['mask'], sampled_batch['case_name'], sampled_batch['original_size']
-        metric_i = test_single_volume(image, label, net, classes=num_classes, multimask_output=multimask_output,
-                                      patch_size=[img_size, img_size], input_size=[input_size, input_size],
-                                      original_size = original_size, test_save_path=test_save_path, case=case_name, z_spacing=db_config['z_spacing'])
-    return 1
-
-
-def config_to_dict(config):
-    items_dict = {}
-    with open(config, 'r') as f:
-        items = f.readlines()
-    for i in range(len(items)):
-        key, value = items[i].strip().split(': ')
-        items_dict[key] = value
-    return items_dict
-
-
-if __name__ == '__main__':
+def main()
     # Define default variables
     config = None  # The config file provided by the trained model
-    volume_path = '/input/images/adenocarcinoma-image'
-    output_dir = '/output/images/adenocarcinoma-mask'
+    input_root = '/input/images/adenocarcinoma-image'
+    output_root = '/output/images/adenocarcinoma-mask'
     dataset = 'COSAS'  # Experiment name
     num_classes = 2
     list_dir = '/cluster/project7/SAMed/samed_codes/SAMed/lists/lists_Synapse/'
@@ -69,6 +43,8 @@ if __name__ == '__main__':
     rank = 4  # Rank for LoRA adaptation
     module = 'sam_lora_image_encoder'
     class_type = 'LoRA_Sam_v0_v2'
+    patch_size=[512, 512]
+    z_spacing = 1
 
     if not deterministic:
         cudnn.benchmark = True
@@ -80,18 +56,9 @@ if __name__ == '__main__':
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
-    dataset_name = dataset
-    dataset_config = {
-        'COSAS': {
-            'Dataset': COSASDataset,
-            'volume_path': volume_path,
-            'list_dir': list_dir,
-            'num_classes': num_classes,
-            'z_spacing': 1
-        }
-    }
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+   
+    if not os.path.exists(output_root):
+        os.makedirs(output_root)
 
     # register model
     sam, img_embedding_size = sam_model_registry[vit_name](image_size=img_size,
@@ -114,19 +81,48 @@ if __name__ == '__main__':
     else:
         multimask_output = False
 
-    # initialize log
-    # log_folder = os.path.join(output_dir, 'test_log')
-    # os.makedirs(log_folder, exist_ok=True)
-    # logging.basicConfig(filename=log_folder + '/' + 'log.txt', level=logging.INFO,
-    #                     format='[%(asctime)s.%(msecs)03d] %(message)s', datefmt='%H:%M:%S')
-    # logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
-    # logging.info(f'\nTesting for model state at {test_epoch}\n')
-    # logging.info(str(args))
-
-    if is_savenii:
-        test_save_path = os.path.join(output_dir, 'predictions')
-        os.makedirs(test_save_path, exist_ok=True)
-    else:
-        test_save_path = None
     
-    inference(multimask_output, dataset_config[dataset_name], net, test_save_path)
+    for filename in os.listdir(input_root):
+        if filename.endswith('.mha'):
+            output_path = f'{output_root}/{filename}'
+            image = image.squeeze(0).cpu().detach().numpy()
+            try:
+                input_path = input_root + '/' + filename
+                image = read(input_path)
+                image = np.transpose(image, (2, 0, 1))
+                prediction = np.zeros_like(image)
+                    
+                x, y = image.shape[1], image.shape[2]
+                if x != patch_size[0] or y != patch_size[1]:
+                    image = zoom(image, (1, patch_size[0] / x, patch_size[1] / y), order=3)
+                        
+                    inputs = torch.from_numpy(image).unsqueeze(0).float().cuda()
+                
+                    net.eval()
+                    with torch.no_grad():
+                        outputs = net(inputs, multimask_output, patch_size[0])
+                        output_masks = outputs['masks']
+                        
+                        out = torch.argmax(torch.softmax(output_masks, dim=1), dim=1).squeeze(0)
+                        
+                        out = out.cpu().detach().numpy()
+                        
+                        out_h, out_w = out.shape
+                        
+                        
+                        if x != out_h or y != out_w:
+                            prediction = zoom(out, (x / out_h, y / out_w), order=0)
+                            
+                        else:
+                            prediction = out
+
+                        prd_itk = sitk.GetImageFromArray(prediction.astype(np.float32))
+                        prd_itk.SetSpacing((1, 1, z_spacing))
+                        sitk.WriteImage(prd_itk, output_path)
+            
+            except Exception as error:
+                        print(error)
+
+if __name__ == '__main__':
+    main()
+    

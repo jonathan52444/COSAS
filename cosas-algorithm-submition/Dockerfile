@@ -12,6 +12,9 @@ WORKDIR $PROJECTDIR
 COPY inference_main.py checkpoint_199_512.pth sam_vit_b_01ec64.pth requirements.txt $PROJECTDIR/
 COPY PitSAM $PROJECTDIR/PitSAM
 
+RUN mkdir -p /input/images/adenocarcinoma-image && \
+    mkdir -p /output/images/adenocarcinoma-mask && \
+    chmod -R 777 /input /output
 # RUN pip3 install --upgrade pip
 # Install Python dependencies from the requirements file
 # RUN pip3 install --no-cache-dir -r $PROJECTDIR/requirements.txt -v
