@@ -157,8 +157,7 @@ def main():
                     sitk.WriteImage(prd_itk, output_path)
 
             except Exception as error:
-                        logging.info(error)
+                logging.info(error)
 
 if __name__ == '__main__':
     main()
-    
