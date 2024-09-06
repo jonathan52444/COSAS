@@ -7,7 +7,7 @@ nibabel==4.0.2
 monai==1.1.0
 opencv_python
 pycocotools==2.0.6
-safetensors==0.3.1
+safetensors
 scipy
 SimpleITK
 tensorboardX==2.6
@@ -19,3 +19,4 @@ onnx
 onnxruntime
 ftfy
 regex
+Pillow

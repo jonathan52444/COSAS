@@ -29,32 +29,6 @@ def write(path, array):
     image = SimpleITK.GetImageFromArray(array)
     SimpleITK.WriteImage(image, path, useCompression=False)
 
-import sys
-import os
-
-def print_os_paths():
-    logging.info("Current working directory:")
-    logging.info(os.getcwd())
-    logging.info("\nPython executable path:")
-    logging.info(sys.executable)
-    logging.info("\nAll system paths:")
-    for index, path in enumerate(sys.path, start=1):
-        logging.info(f"{index}. {path}")
-
-def print_directory_contents():
-    current_dir = os.getcwd()
-    logging.info(f"Contents of directory: {current_dir}")
-    logging.info("-" * 50)
-
-    for item in os.listdir(current_dir):
-        item_path = os.path.join(current_dir, item)
-        if os.path.isdir(item_path):
-            logging.info(f"[DIR]  {item}")
-        elif os.path.isfile(item_path):
-            logging.info(f"[FILE] {item}")
-        else:
-            logging.info(f"[OTHER] {item}")
-
 def main():
     # Define default variables
     input_root = '/input/images/adenocarcinoma-image' # '/Users/sirbucks/Desktop/Coding/Workspaces/COSAS/cosas-algorithm-submition/input/images/adenocarcinoma-image'
@@ -124,6 +98,7 @@ def main():
     for filename in os.listdir(input_root):
         if filename.endswith('.mha'):
             output_path = f'{output_root}/{filename}'
+            logging.info(f'This is the output path {output_path}')
             try:
                 input_path = input_root + '/' + filename
                 image = read(input_path)
@@ -149,12 +124,16 @@ def main():
                         
                     if x != out_h or y != out_w:
                         prediction = zoom(out, (x / out_h, y / out_w), order=0)  
+                        logging.info('The prediction has been generated')
                     else:
                         prediction = out
-                    
-                    prd_itk = sitk.GetImageFromArray(prediction.astype(np.float32))
-                    prd_itk.SetSpacing((1, 1, z_spacing))
-                    sitk.WriteImage(prd_itk, output_path)
+                        logging.info('The prediction has been generated')
+
+                    # prd_itk = sitk.GetImageFromArray(prediction.astype(np.float32))
+                    # prd_itk.SetSpacing((1, 1, z_spacing))
+                    # sitk.WriteImage(prd_itk, output_path)
+
+                    write(output_path, prediction.squeeze().astype('uint8'))
 
             except Exception as error:
                 logging.info(error)
