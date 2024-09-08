@@ -41,7 +41,7 @@ def main():
     seed = 1234  # Random seed
     deterministic = 1  # Whether to use deterministic training
     ckpt = 'sam_vit_b_01ec64.pth' # '/Users/sirbucks/Desktop/Coding/Workspaces/COSAS/cosas-algorithm-submition/sam_vit_b_01ec64.pth' #  # Pretrained checkpoint
-    lora_ckpt = 'checkpoint_199_512.pth'  # '/Users/sirbucks/Desktop/Coding/Workspaces/COSAS/cosas-algorithm-submition/checkpoint_199_512.pth' # The checkpoint from LoRA
+    lora_ckpt = 'epoch_170.pth'  # '/Users/sirbucks/Desktop/Coding/Workspaces/COSAS/cosas-algorithm-submition/checkpoint_199_512.pth' # The checkpoint from LoRA
     vit_name = 'vit_b'  # Select one vit model
     rank = 4  # Rank for LoRA adaptation
     module = 'sam_lora_image_encoder'
@@ -128,10 +128,6 @@ def main():
                     else:
                         prediction = out
                         logging.info('The prediction has been generated')
-
-                    # prd_itk = sitk.GetImageFromArray(prediction.astype(np.float32))
-                    # prd_itk.SetSpacing((1, 1, z_spacing))
-                    # sitk.WriteImage(prd_itk, output_path)
 
                     write(output_path, prediction.squeeze().astype('uint8'))
 
