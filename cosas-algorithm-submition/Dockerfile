@@ -9,9 +9,10 @@ RUN apt-get update && apt-get install -y libgl1 libglib2.0-0 \
 
 ENV PROJECTDIR=/opt/app
 WORKDIR $PROJECTDIR
-COPY epoch_170.pth sam_vit_b_01ec64.pth requirements.txt $PROJECTDIR/
+COPY sam_vit_b_01ec64.pth requirements.txt $PROJECTDIR/
 COPY inference_main.py sam_lora_image_encoder.py $PROJECTDIR/
 COPY segment_anything $PROJECTDIR/segment_anything
+COPY epoch_170.pth $PROJECTDIR/
 
 # RUN pip3 install --upgrade pip
 # Install Python dependencies from the requirements file
